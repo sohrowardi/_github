@@ -3,6 +3,13 @@ import re
 import time
 import sys
 
+def clear_terminal():
+    # Clearing the terminal screen
+    if os.name == 'nt':
+        os.system('cls')
+    else:
+        os.system('clear')
+
 def save_end_time(end_time, timer_name):
     script_dir = os.path.dirname(__file__)
     log_folder = os.path.join(script_dir, "log")
@@ -47,6 +54,7 @@ def format_time(days, hours, minutes, seconds):
 
 def countdown(end_time):
     while True:
+        clear_terminal()  # Clearing the terminal before displaying the countdown
         current_time = int(time.time())
         if current_time >= end_time:
             print("Countdown finished!")

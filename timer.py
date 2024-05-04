@@ -3,13 +3,21 @@ import re
 import time
 import sys
 
-def save_end_time(end_time):
-    with open("end_time.txt", "w") as f:
+def save_end_time(end_time, timer_name):
+    script_dir = os.path.dirname(__file__)
+    log_folder = os.path.join(script_dir, "log")
+    if not os.path.exists(log_folder):
+        os.makedirs(log_folder)
+    file_path = os.path.join(log_folder, f"{timer_name}.txt")
+    with open(file_path, "w") as f:
         f.write(str(end_time))
 
-def load_end_time():
+def load_end_time(timer_name):
+    script_dir = os.path.dirname(__file__)
+    log_folder = os.path.join(script_dir, "log")
+    file_path = os.path.join(log_folder, f"{timer_name}.txt")
     try:
-        with open("end_time.txt", "r") as f:
+        with open(file_path, "r") as f:
             return int(f.read())
     except FileNotFoundError:
         return None
@@ -56,25 +64,60 @@ def countdown(end_time):
         time.sleep(1)
 
 def main():
-    # Check if there is a saved end time
-    end_time = load_end_time()
-
-    if end_time is None:
-        # If no end time is saved, ask user to input the countdown duration
+    script_dir = os.path.dirname(__file__)
+    log_folder = os.path.join(script_dir, "log")
+    if not os.path.exists(log_folder) or not os.listdir(log_folder):
+        print("No existing timers found.")
+        timer_name = input("Enter timer name: ")
         countdown_duration_str = input("Enter countdown duration (e.g., 2h 23m 34s): ")
         print("Input received:", countdown_duration_str)
         try:
             countdown_duration = parse_duration(countdown_duration_str)
             end_time = int(time.time()) + countdown_duration
             print("End time:", end_time)
-            save_end_time(end_time)
+            save_end_time(end_time, timer_name)
         except ValueError as e:
             print("Error:", e)
             return
-
-    print("Starting countdown with end time:", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(end_time)))
-    # Start countdown
-    countdown(end_time)
+        print("Starting countdown with end time:", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(end_time)))
+        countdown(end_time)
+    else:
+        print("1. Start a new timer")
+        print("2. See existing timers")
+        choice = input("Enter your choice: ")
+        if choice == "1":
+            timer_name = input("Enter timer name: ")
+            countdown_duration_str = input("Enter countdown duration (e.g., 2h 23m 34s): ")
+            print("Input received:", countdown_duration_str)
+            try:
+                countdown_duration = parse_duration(countdown_duration_str)
+                end_time = int(time.time()) + countdown_duration
+                print("End time:", end_time)
+                save_end_time(end_time, timer_name)
+            except ValueError as e:
+                print("Error:", e)
+                return
+            print("Starting countdown with end time:", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(end_time)))
+            countdown(end_time)
+        elif choice == "2":
+            log_files = os.listdir(log_folder)
+            if not log_files:
+                print("No existing timers found.")
+                return
+            print("Existing timers:")
+            for index, log_file in enumerate(log_files, start=1):
+                print(f"{index}. {os.path.splitext(log_file)[0]}")
+            selected_index = int(input("Enter the index of the timer to see: "))
+            selected_timer = log_files[selected_index - 1]
+            timer_name = os.path.splitext(selected_timer)[0]
+            end_time = load_end_time(timer_name)
+            if end_time is None:
+                print("Timer not found.")
+                return
+            print(f"End time for timer '{timer_name}':", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(end_time)))
+            countdown(end_time)
+        else:
+            print("Invalid choice.")
 
 if __name__ == "__main__":
     main()

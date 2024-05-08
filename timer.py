@@ -23,19 +23,25 @@ def load_end_time(timer_name):
         return None
 
 def parse_duration(duration_str):
-    duration_regex = re.compile(r'(?:(\d+)d\s*)?(?:(\d+)h\s*)?(?:(\d+)m\s*)?(?:(\d+)s\s*)?')
+    duration_regex = re.compile(r'(?:(\d+)y\s*)?(?:(\d+)mo\s*)?(?:(\d+)d\s*)?(?:(\d+)h\s*)?(?:(\d+)m\s*)?(?:(\d+)s\s*)?')
     matches = duration_regex.match(duration_str)
     if matches:
-        days = int(matches.group(1) or 0)
-        hours = int(matches.group(2) or 0)
-        minutes = int(matches.group(3) or 0)
-        seconds = int(matches.group(4) or 0)
-        return days * 24 * 60 * 60 + hours * 60 * 60 + minutes * 60 + seconds
+        years = int(matches.group(1) or 0)
+        months = int(matches.group(2) or 0)
+        days = int(matches.group(3) or 0)
+        hours = int(matches.group(4) or 0)
+        minutes = int(matches.group(5) or 0)
+        seconds = int(matches.group(6) or 0)
+        return years * 365 * 24 * 60 * 60 + months * 30 * 24 * 60 * 60 + days * 24 * 60 * 60 + hours * 60 * 60 + minutes * 60 + seconds
     else:
         raise ValueError("Invalid duration format")
 
-def format_time(days, hours, minutes, seconds):
+def format_time(years, months, days, hours, minutes, seconds):
     time_str = ""
+    if years:
+        time_str += f"{years} years, "
+    if months:
+        time_str += f"{months} months, "
     if days:
         time_str += f"{days} days, "
     if hours:
@@ -44,6 +50,7 @@ def format_time(days, hours, minutes, seconds):
         time_str += f"{minutes} minutes, "
     time_str += f"{seconds} seconds"
     return time_str
+
 
 def countdown(end_time):
     while True:
@@ -56,12 +63,15 @@ def countdown(end_time):
         minutes, seconds = divmod(remaining_time, 60)
         hours, minutes = divmod(minutes, 60)
         days, hours = divmod(hours, 24)
+        months, days = divmod(days, 30)
+        years, months = divmod(months, 12)
 
-        time_str = format_time(days, hours, minutes, seconds)
+        time_str = format_time(years, months, days, hours, minutes, seconds)
         print("\033[1;33;40m{}\033[0;0m".format(time_str), end="\r")
         sys.stdout.flush()
 
         time.sleep(1)
+
 
 def main():
     script_dir = os.path.dirname(__file__)
